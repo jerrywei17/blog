@@ -7,7 +7,7 @@
 docker-compose up -d --build
 ```
 
-# for front-end dev
+# for frontend dev
 ```
 docker-compose -f dev-frontend.yml up -d --build
 cd client
