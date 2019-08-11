@@ -1,0 +1,65 @@
+version: '2'
+
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - backup-data:/data/db
+    networks:
+      - blog-network
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - blog-network
+  server:
+    image: jerrywei17/server:latest
+    build: ./server
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - blog-network
+    volumes:
+      - ./server/src:/usr/src/app/src
+      - ./private-keys:/usr/src/app/src/private-keys
+    ports:
+      -  "5000:5000"
+    command: yarn run start
+  client:
+    image: jerrywei17/client:latest
+    build: ./client
+    volumes:
+      - ./nginx/client-dist:/usr/src/app/build
+    command: sh -c "yarn run build"
+  nginx:
+    restart: always
+    image: nginx:latest
+    networks:
+      - blog-network
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/client-dist:/usr/src/app/client
+    ports:
+      - 3000:3000
+  browserless:
+    image: browserless/chrome:latest
+    env_file:
+      - ./.env
+    container_name: "browserless"
+    ports:
+      - 9090:9090
+    networks:
+      - blog-network
+networks:
+  blog-network:
+    driver: bridge
+
+volumes:
+  backup-data:  # db
+  redis-data:  # cache

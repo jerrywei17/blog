@@ -1,0 +1,40 @@
+version: '2'
+
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - backup-data:/data/db
+    networks:
+      - blog-network
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - blog-network
+  server:
+    image: jerrywei17/server:latest
+    build: ./server
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - blog-network
+    volumes:
+      - ./server/src:/usr/src/app/src
+      - ./private-keys:/usr/src/app/src/private-keys
+    ports:
+      -  "5000:5000"
+    command: yarn run server
+networks:
+  blog-network:
+    driver: bridge
+
+volumes:
+  backup-data:  # db
+  redis-data:  # cache
